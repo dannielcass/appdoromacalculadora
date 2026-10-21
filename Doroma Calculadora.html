@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Personalizável - Definitiva</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0b0f15;
+            touch-action: none;
+        }
+
+        /* Fundo principal */
+        .bg-wallpaper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #831843, #4c0519, #0f172a);
+            z-index: 1;
+            transition: background 1s ease-in-out;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 14, 20, 0.4);
+            backdrop-filter: blur(2px);
+            z-index: 2;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 3;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+        }
+
+        /* Botão para ocultar/mostrar o menu superior */
+        .toggle-menu-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        /* Topo (Menu de Definições) */
+        .top-bar {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 92%;
+            max-width: 400px;
+            z-index: 50;
+            transition: all 0.3s ease;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .top-bar.hidden {
+            display: none;
+        }
+
+        .digital-clock {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+            letter-spacing: 2px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 3px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 2px;
+        }
+
+        .module-selector {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+            justify-content: center;
+            margin-bottom: 4px;
+        }
+
+        .mod-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #b0c4de;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.2s;
+        }
+
+        .mod-btn.active {
+            background: #e11d48;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(225, 29, 72, 0.6);
+            border-color: #e11d48;
+        }
+
+        .controls-split {
+            display: flex;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .control-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .control-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #f472b6;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .upload-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px dashed rgba(255, 255, 255, 0.4);
+            color: #fff;
+            padding: 6px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            display: block;
+        }
+
+        .upload-btn input {
+            display: none;
+        }
+
+        .action-sub-btn {
+            background: rgba(217, 70, 239, 0.3);
+            border: 1px solid rgba(217, 70, 239, 0.5);
+            color: #fff;
+            padding: 5px;
+            border-radius: 8px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Calculadora Móvel (Arrastável) */
+        .calculator {
+            position: absolute;
+            top: 220px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(22, 27, 34, 0.95);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            width: 100%;
+            max-width: 360px;
+            border-radius: 24px;
+            padding: 14px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8);
+            z-index: 40;
+            cursor: grab;
+        }
+
+        .calc-drag-handle {
+            width: 100%;
+            height: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .calc-drag-bar {
+            width: 40px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+        }
+
+        .display {
+            width: 100%;
+            background: rgba(1, 4, 9, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: right;
+            margin-bottom: 12px;
+        }
+
+        #history {
+            font-size: 0.75rem;
+            color: #8b949e;
+            min-height: 14px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #output {
+            font-size: 1.9rem;
+            font-weight: 600;
+            color: #ffffff;
+            overflow-x: auto;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 7px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 12px 0;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.92);
+        }
+
+        /* BOTÕES NUMÉRICOS */
+        .btn-boneca {
+            position: relative;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+            background-color: #831843;
+        }
+
+        .btn-boneca::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .btn-boneca span {
+            position: relative;
+            z-index: 2;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.9);
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        /* Outros botões */
+        .btn-sci {
+            background: rgba(217, 70, 239, 0.25);
+            border-color: rgba(217, 70, 239, 0.4);
+            color: #f472b6;
+            font-size: 0.85rem;
+        }
+
+        .btn-op {
+            background: rgba(245, 158, 11, 0.3);
+            border-color: rgba(245, 158, 11, 0.5);
+            color: #fbbf24;
+        }
+
+        .btn-eq {
+            background: #e11d48;
+            border: none;
+            color: #fff;
+        }
+
+        .btn-ac {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: rgba(239, 68, 68, 0.5);
+            color: #f87171;
+        }
+
+        /* Rodapé */
+        .footer-credit {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.65rem;
+            letter-spacing: 1px;
+            z-index: 10;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-wallpaper" id="bgWallpaper"></div>
+    <div class="overlay"></div>
+
+    <button class="toggle-menu-btn" onclick="alternarMenu()">👁️ Menu</button>
+
+    <!-- Topo (Menu de Definições) -->
+    <div class="top-bar" id="topBar">
+        <div class="digital-clock" id="digitalClock">00:00:00</div>
+        
+        <div class="module-selector">
+            <button class="mod-btn active" id="btnModMulheres" onclick="mudarModulo('mulheres')">👩 Mulheres</button>
+            <button class="mod-btn" id="btnModHomens" onclick="mudarModulo('homens')">👨 Homens</button>
+        </div>
+
+        <div class="controls-split">
+            <!-- LADO ESQUERDO: Fundo da Calculadora -->
+            <div class="control-side">
+                <div class="control-title">Fundo Calculadora</div>
+                <label class="upload-btn">
+                    📁 + Fundo(s)
+                    <input type="file" accept="image/*" multiple onchange="carregarWallpaperDispositivo(event)">
+                </label>
+                <button class="action-sub-btn" onclick="mudarWallpaper()">🖼️ Próximo</button>
+            </div>
+
+            <!-- LADO DIREITO: Fundos Numéricos -->
+            <div class="control-side">
+                <div class="control-title">Fundos Numéricos</div>
+                <label class="upload-btn">
+                    🔢 + Várias Teclas
+                    <input type="file" accept="image/*" multiple onchange="carregarTecladoDispositivo(event)">
+                </label>
+                <button class="action-sub-btn" onclick="pedirTeclaParaEditarIndividual()">🎯 Mudar 1 Tecla</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Calculadora Móvel -->
+    <div class="calculator" id="calculatorBox">
+        <div class="calc-drag-handle" id="dragHandle">
+            <div class="calc-drag-bar"></div>
+        </div>
+
+        <div class="display">
+            <div id="history"></div>
+            <div id="output">0</div>
+        </div>
+
+        <div class="keypad">
+            <button class="btn btn-ac" onclick="limparTudo()">AC</button>
+            <button class="btn btn-sci" onclick="inserir('(Math.sin(')">sin</button>
+            <button class="btn btn-sci" onclick="inserir('(Math.cos(')">cos</button>
+            <button class="btn btn-op" onclick="inserir('/')">÷</button>
+
+            <button class="btn btn-sci" onclick="inserir('(Math.tan(')">tan</button>
+            <button class="btn btn-boneca" id="num-7" onclick="inserir('7')"><span>7</span></button>
+            <button class="btn btn-boneca" id="num-8" onclick="inserir('8')"><span>8</span></button>
+            <button class="btn btn-boneca" id="num-9" onclick="inserir('9')"><span>9</span></button>
+
+            <button class="btn btn-sci" onclick="inserir('Math.sqrt(')">√</button>
+            <button class="btn btn-boneca" id="num-4" onclick="inserir('4')"><span>4</span></button>
+            <button class="btn btn-boneca" id="num-5" onclick="inserir('5')"><span>5</span></button>
+            <button class="btn btn-boneca" id="num-6" onclick="inserir('6')"><span>6</span></button>
+
+            <button class="btn btn-sci" onclick="inserir('**')">^</button>
+            <button class="btn btn-boneca" id="num-1" onclick="inserir('1')"><span>1</span></button>
+            <button class="btn btn-boneca" id="num-2" onclick="inserir('2')"><span>2</span></button>
+            <button class="btn btn-boneca" id="num-3" onclick="inserir('3')"><span>3</span></button>
+
+            <button class="btn btn-sci" onclick="inserir('00')">00</button>
+            <button class="btn btn-boneca" id="num-0" onclick="inserir('0')"><span>0</span></button>
+            <button class="btn" onclick="inserir('.')">.</button>
+            <button class="btn btn-op" onclick="inserir('+')">+</button>
+
+            <button class="btn btn-op" onclick="inserir('-')">-</button>
+            <button class="btn btn-op" onclick="inserir('*')">×</button>
+            <button class="btn btn-sci" onclick="inserir('Math.PI')">π</button>
+            <button class="btn btn-eq" onclick="calcular()">=</button>
+        </div>
+    </div>
+
+    <!-- Rodapé Discreto -->
+    <div class="footer-credit">Doroma calculator</div>
+
+    <!-- Input oculto global para alteração individual de tecla -->
+    <input type="file" id="fileInputIndividual" accept="image/*" style="display:none" onchange="processarFotoIndividual(event)">
+
+    <script>
+        let wallpapersMulheres = JSON.parse(localStorage.getItem('wpMulheres')) || [];
+        let wallpapersHomens = JSON.parse(localStorage.getItem('wpHomens')) || [];
+
+        let tecladoMulheres = JSON.parse(localStorage.getItem('tecMulheres')) || {};
+        let tecladoHomens = JSON.parse(localStorage.getItem('tecHomens')) || {};
+
+        let moduloAtual = 'mulheres';
+        let currentBgIndex = 0;
+        let teclaAlvo = null;
+        const bgWallpaper = document.getElementById('bgWallpaper');
+
+        function alternarMenu() {
+            const topBar = document.getElementById('topBar');
+            topBar.classList.toggle('hidden');
+        }
+
+        // --- CALCULADORA MÓVEL ---
+        const calcBox = document.getElementById('calculatorBox');
+        let isDragging = false;
+        let startX, startY, initialX, initialY;
+
+        function iniciarArrasto(e) {
+            isDragging = true;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX;
+            startY = clientY;
+
+            const rect = calcBox.getBoundingClientRect();
+            initialX = rect.left;
+            initialY = rect.top;
+
+            calcBox.style.transform = 'none';
+            calcBox.style.left = initialX + 'px';
+            calcBox.style.top = initialY + 'px';
+        }
+
+        function duranteArrasto(e) {
+            if (!isDragging) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            const dx = clientX - startX;
+            const dy = clientY - startY;
+
+            calcBox.style.left = (initialX + dx) + 'px';
+            calcBox.style.top = (initialY + dy) + 'px';
+        }
+
+        function pararArrasto() {
+            isDragging = false;
+        }
+
+        calcBox.addEventListener('mousedown', iniciarArrasto);
+        window.addEventListener('mousemove', duranteArrasto);
+        window.addEventListener('mouseup', pararArrasto);
+
+        calcBox.addEventListener('touchstart', iniciarArrasto);
+        window.addEventListener('touchmove', duranteArrasto);
+        window.addEventListener('touchend', pararArrasto);
+
+
+        // --- GESTÃO DE TECLAS INDIVIDUAIS ---
+        function pedirTeclaParaEditarIndividual() {
+            let inputNum = prompt("Qual o número do teclado (0 a 9) que quer alterar?", "0");
+            if (inputNum === null) return;
+            let num = parseInt(inputNum.trim());
+            if (isNaN(num) || num < 0 || num > 9) {
+                alert("Número inválido! Digite entre 0 e 9.");
+                return;
+            }
+            teclaAlvo = num;
+            document.getElementById('fileInputIndividual').click();
+        }
+
+        function processarFotoIndividual(event) {
+            const file = event.target.files[0];
+            if (!file || teclaAlvo === null) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let mapaAtual = (moduloAtual === 'mulheres') ? tecladoMulheres : tecladoHomens;
+                mapaAtual[teclaAlvo] = e.target.result;
+
+                if (moduloAtual === 'mulheres') {
+                    localStorage.setItem('tecMulheres', JSON.stringify(tecladoMulheres));
+                } else {
+                    localStorage.setItem('tecHomens', JSON.stringify(tecladoHomens));
+                }
+                aplicarImagensTeclado();
+                alert(`Miniatura do número ${teclaAlvo} alterada com sucesso!`);
+                teclaAlvo = null;
+                event.target.value = '';
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function aplicarImagensTeclado() {
+            let mapaAtual = (moduloAtual === 'mulheres') ? tecladoMulheres : tecladoHomens;
+            for (let i = 0; i <= 9; i++) {
+                const btn = document.getElementById(`num-${i}`);
+                if (btn) {
+                    if (mapaAtual[i]) {
+                        btn.style.backgroundImage = `url('${mapaAtual[i]}')`;
+                        btn.style.backgroundColor = 'transparent';
+                    } else {
+                        btn.style.backgroundImage = 'none';
+                        btn.style.backgroundColor = (moduloAtual === 'mulheres') ? '#831843' : '#1e3a8a';
+                    }
+                }
+            }
+        }
+
+        function mudarModulo(modulo) {
+            moduloAtual = modulo;
+            currentBgIndex = 0;
+            
+            const btnMulheres = document.getElementById('btnModMulheres');
+            const btnHomens = document.getElementById('btnModHomens');
+
+            if (modulo === 'mulheres') {
+                btnMulheres.classList.add('active');
+                btnHomens.classList.remove('active');
+            } else {
+                btnHomens.classList.add('active');
+                btnMulheres.classList.remove('active');
+            }
+            atualizarFundoAtual();
+            aplicarImagensTeclado();
+        }
+
+        function atualizarFundoAtual() {
+            let lista = (moduloAtual === 'mulheres') ? wallpapersMulheres : wallpapersHomens;
+            if (lista.length > 0) {
+                bgWallpaper.style.backgroundImage = `url('${lista[currentBgIndex]}')`;
+                bgWallpaper.style.backgroundSize = 'cover';
+                bgWallpaper.style.backgroundPosition = 'center';
+            } else {
+                bgWallpaper.style.backgroundImage = 'none';
+                if (moduloAtual === 'mulheres') {
+                    bgWallpaper.style.background = 'linear-gradient(135deg, #831843, #4c0519, #0f172a)';
+                } else {
+                    bgWallpaper.style.background = 'linear-gradient(135deg, #1e3a8a, #172554, #0f172a)';
+                }
+            }
+        }
+
+        function mudarWallpaper() {
+            let lista = (moduloAtual === 'mulheres') ? wallpapersMulheres : wallpapersHomens;
+            if (lista.length === 0) return;
+            currentBgIndex = (currentBgIndex + 1) % lista.length;
+            atualizarFundoAtual();
+        }
+
+        function carregarWallpaperDispositivo(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+            let lista = (moduloAtual === 'mulheres') ? wallpapersMulheres : wallpapersHomens;
+
+            for (let i = 0; i < files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    lista.push(e.target.result);
+                    if (moduloAtual === 'mulheres') {
+                        localStorage.setItem('wpMulheres', JSON.stringify(wallpapersMulheres));
+                    } else {
+                        localStorage.setItem('wpHomens', JSON.stringify(wallpapersHomens));
+                    }
+                    currentBgIndex = lista.length - 1;
+                    atualizarFundoAtual();
+                }
+                reader.readAsDataURL(files[i]);
+            }
+            alert("Imagem(ns) de fundo carregada(s) com sucesso!");
+        }
+
+        function carregarTecladoDispositivo(event) {
+            const files = event.target.files;
+            if (files.length === 0) return;
+
+            let mapaAtual = (moduloAtual === 'mulheres') ? tecladoMulheres : tecladoHomens;
+
+            let count = 0;
+            for (let i = 0; i < files.length && i <= 9; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e, index) {
+                    return function(eventResult) {
+                        mapaAtual[index] = eventResult.target.result;
+                        count++;
+                        if (count === Math.min(files.length, 10)) {
+                            salvarEAtualizarTeclado(mapaAtual);
+                            alert(`Teclado atualizado com ${count} imagens distribuídas de 0 a 9!`);
+                        }
+                    }
+                }(e, i);
+                reader.readAsDataURL(files[i]);
+            }
+        }
+
+        function salvarEAtualizarTeclado(mapa) {
+            if (moduloAtual === 'mulheres') {
+                localStorage.setItem('tecMulheres', JSON.stringify(mapa));
+            } else {
+                localStorage.setItem('tecHomens', JSON.stringify(mapa));
+            }
+            aplicarImagensTeclado();
+        }
+
+        // Inicializar aplicação
+        mudarModulo('mulheres');
+
+        // Relógio Digital
+        function atualizarRelogio() {
+            const agora = new Date();
+            const horas = String(agora.getHours()).padStart(2, '0');
+            const minutos = String(agora.getMinutes()).padStart(2, '0');
+            const segundos = String(agora.getSeconds()).padStart(2, '0');
+            document.getElementById('digitalClock').textContent = `${horas}:${minutos}:${segundos}`;
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio();
+
+        // Calculadora
+        const output = document.getElementById('output');
+        const history = document.getElementById('history');
+        let expressao = "";
+        let limparProximo = false;
+
+        function inserir(valor) {
+            if (output.textContent === "Erro" || limparProximo) {
+                expressao = "";
+                limparProximo = false;
+            }
+            if (expressao === "0" && valor !== '.') {
+                expressao = "";
+            }
+            expressao += valor;
+            output.textContent = expressao;
+        }
+
+        function limparTudo() {
+            expressao = "";
+            output.textContent = "0";
+            history.textContent = "";
+            limparProximo = false;
+        }
+
+        function calcular() {
+            if (!expressao) return;
+            try {
+                history.textContent = expressao;
+                let resultado = eval(expressao);
+                
+                if (isNaN(resultado) || !isFinite(resultado)) {
+                    throw new Error("Inválido");
+                }
+
+                output.textContent = resultado;
+                expressao = String(resultado);
+                limparProximo = true;
+            } catch (erro) {
+                output.textContent = "Erro";
+                expressao = "";
+                limparProximo = true;
+            }
+        }
+    </script>
+</body>
+</html>
